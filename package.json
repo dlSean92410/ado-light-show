@@ -1,0 +1,8 @@
+{
+	"name": "ado-light-show",
+	"private": true,
+	"scripts": {
+		"dev:edit": "cd apps/script-editor && npm run dev",
+		"dev:ext": "cd apps/extension && npm run dev"
+	}
+}
