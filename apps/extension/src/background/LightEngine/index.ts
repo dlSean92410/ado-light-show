@@ -25,10 +25,10 @@ class LightEngine {
 	};
 
 	public stop = () => {
-		if (this.loopID != null) {
-			clearInterval(this.loopID);
-			this.loopID = null;
-		}
+		if (this.loopID == null) return;
+
+		clearInterval(this.loopID);
+		this.loopID = null;
 	};
 
 	private loop = async (keyframes: Keyframe[], tabID: number) => {

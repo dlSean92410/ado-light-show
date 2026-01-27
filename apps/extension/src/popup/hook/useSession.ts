@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Message, Session } from '@/utility/type';
 
-export function useSession() {
+const useSession = () => {
 	const [session, setSession] = useState<Session>({ status: 'DEACTIVATED' });
 
 	useEffect(() => {
@@ -9,7 +9,7 @@ export function useSession() {
 			{ type: 'GET_SESSION' },
 			(message) => {
 				setSession(message.session);
-			}
+			},
 		);
 
 		const handler = (message: Message) => {
@@ -36,4 +36,6 @@ export function useSession() {
 		handleInitiateSession,
 		handleStopSession,
 	};
-}
+};
+
+export default useSession;

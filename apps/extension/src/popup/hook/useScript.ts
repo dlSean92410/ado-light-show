@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Keyframe, Message, Script, ScriptSource } from '@/utility/type';
 
-export function useScript() {
+const useScript = () => {
 	const [source, setSource] = useState<ScriptSource>('CUSTOM');
 	const [name, setName] = useState<Script['name']>(null);
 
@@ -83,4 +83,6 @@ export function useScript() {
 		handleUpdateScriptSource,
 		handleCustomScriptUpload,
 	};
-}
+};
+
+export default useScript;

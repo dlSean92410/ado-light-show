@@ -1,7 +1,7 @@
 import '@/style/global.css';
 
-import { useSession } from '@/popup/hook/useSession';
-import { useScript } from '@/popup/hook/useScript';
+import useSession from '@/popup/hook/useSession';
+import useScript from '@/popup/hook/useScript';
 import { SCRIPT_SOURCES } from '@/utility/constant';
 import type { ScriptSource } from '@/utility/type';
 
