@@ -1,8 +1,14 @@
 {
-	"name": "ado-light-show",
+	"name": "@dl_sean/ado-light-show",
 	"private": true,
+	"workspaces": [
+		"apps/extension",
+		"apps/script-editor",
+		"packages/common",
+		"packages/command-encoder"
+	],
 	"scripts": {
-		"dev:edit": "cd apps/script-editor && npm run dev",
-		"dev:ext": "cd apps/extension && npm run dev"
+		"dev:edit": "npm --workspace @dl_sean/ado-light-show-script-editor run dev",
+		"dev:ext": "npm --workspace @dl_sean/ado-light-show-extension run dev"
 	}
 }

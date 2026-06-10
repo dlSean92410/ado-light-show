@@ -12,15 +12,11 @@ const Overlay = ({ onComplete, onCancel }: Props) => {
 		const device = deviceController.getDevice();
 		if (!device) return;
 
-		chrome.runtime.sendMessage<Message>(
-			{
-				type: 'DEVICE_CONNECTED',
-				device: { id: device.id, name: device.name },
-			},
-			() => {
-				onComplete(deviceController);
-			},
-		);
+		chrome.runtime.sendMessage<Message>({
+			type: 'DEVICE_CONNECTED',
+			device: { id: device.id, name: device.name },
+		});
+		onComplete(deviceController);
 	};
 
 	return (

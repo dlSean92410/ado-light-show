@@ -1,59 +1,51 @@
-type BaseKeyframe = {
-	time: number;
-};
-type OnKeyframe = BaseKeyframe & {
-	mode: 'on';
-	color: string;
-};
-type FadeKeyframe = BaseKeyframe & {
-	mode: 'fade';
-	colors: [string, string];
-	offset: number;
-};
-type LoopKeyframe = BaseKeyframe & {
-	mode: 'loop';
-	colors: [string, string, ...string[]];
-	offsets: [number, number, ...number[]];
-};
-type PulseKeyframe = BaseKeyframe & {
-	mode: 'pulse';
-	colors: [string, string, string];
-	offsets: [number, number];
-};
-type Keyframe = OnKeyframe | FadeKeyframe | LoopKeyframe | PulseKeyframe;
-
-type RGB = { r: number; g: number; b: number };
+import type { Keyframe } from '@dl_sean/ado-light-show-common/src/type';
 
 type Message =
-	| {
-			type:
-				| 'ACTIVATE'
-				| 'DEACTIVATE'
-				| 'DEVICE_DISCONNECTED'
-				| 'GET_SESSION'
-				| 'GET_SCRIPT'
-				| 'GET_VIDEO_TIME';
-	  }
-	| {
-			type: 'DEVICE_CONNECTED';
-			device: { id: BluetoothDevice['id']; name: BluetoothDevice['name'] };
-	  }
-	| { type: 'SESSION_UPDATED'; session: Session }
+	// Tab
+	| { type: 'GET_TAB' }
+	// Session
+	| { type: 'GET_SESSION' }
+	| ({ type: 'SESSION_UPDATED' } & MessageResponse<'GET_SESSION'>)
+	// Script
+	| { type: 'GET_SCRIPT' }
 	| { type: 'SET_SCRIPT'; source: ScriptSource; script?: Script }
-	| { type: 'SCRIPT_UPDATED'; script: Script }
-	| { type: 'VIDEO_PLAYING_UPDATED'; value: boolean }
-	| { type: 'SEND_RGB_COMMAND'; value: RGB };
-
-type Session =
+	| ({ type: 'SCRIPT_UPDATED' } & MessageResponse<'GET_SCRIPT'>)
+	// Device
+	| { type: 'GET_DEVICE_NAME' }
+	// Video
+	| { type: 'GET_VIDEO_TITLE' }
+	| { type: 'GET_VIDEO_TIME' }
+	| { type: 'SET_VIDEO_PLAYING'; value: boolean }
+	// Command
+	| { type: 'SEND_RGB_COMMAND'; value: string }
+	// Content Script
+	| { type: 'ACTIVATE' }
+	| { type: 'DEACTIVATE' }
+	// Background Script
+	| { type: 'DEVICE_CONNECTED'; device: Device }
+	| { type: 'DEVICE_DISCONNECTED' };
+type Response =
+	// Tab
+	| { type: 'GET_TAB'; value: chrome.tabs.Tab | null }
+	// Session
 	| {
-			status: 'ACTIVATED';
-			name: string;
-			videoID: string;
-			tabID: number;
-			deviceID: BluetoothDevice['id'];
-			deviceName: BluetoothDevice['name'];
+			type: 'GET_SESSION';
+			status: Session['status'];
+			name?: string | null;
+			deviceName?: Device['name'] | null;
 	  }
-	| { status: 'DEACTIVATED' };
+	// Script
+	| { type: 'GET_SCRIPT'; source: ScriptSource; script: Script }
+	| { type: 'SET_SCRIPT'; source: ScriptSource; name: Script['name'] }
+	// Device
+	| { type: 'GET_DEVICE_NAME'; value: Device['name'] }
+	// Video
+	| { type: 'GET_VIDEO_TITLE'; value: string | null }
+	| { type: 'GET_VIDEO_TIME'; value: number };
+type MessageResponse<T extends Response['type']> = Omit<Extract<Response, { type: T }>, 'type'>;
+
+type Device = { id: BluetoothDevice['id']; name: BluetoothDevice['name'] };
+type Session = { status: 'ACTIVATED'; tabID: number } | { status: 'DEACTIVATED' };
 
 type ScriptSource = 'CUSTOM' | 'REMOTE';
 type Script = {
@@ -61,4 +53,4 @@ type Script = {
 	data: Keyframe[] | null;
 };
 
-export type { Keyframe, RGB, Message, Session, ScriptSource, Script };
+export type { Keyframe, Message, MessageResponse, Device, Session, ScriptSource, Script };

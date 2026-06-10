@@ -1,7 +1,7 @@
-import styleSheet from '@/style/global.css?inline';
+import styleSheet from '@dl_sean/ado-light-show-common/src/global.css?inline';
 
 import { createRoot } from 'react-dom/client';
-import type { Message } from '@/utility/type';
+import type { Message, MessageResponse } from '@/utility/type';
 import Overlay from '@/content/component/Overlay';
 import type DeviceController from '@/content/DeviceController';
 import VideoController from '@/content/VideoController';
@@ -9,11 +9,11 @@ import VideoController from '@/content/VideoController';
 (async () => {
 	console.debug('Ado Light Show extension running...');
 
-	let reactContainer: HTMLDivElement | null = null;
-	let root: ReturnType<typeof createRoot> | null = null;
-
 	const videoController = new VideoController();
 	let deviceController: DeviceController | null = null;
+
+	let reactContainer: HTMLDivElement | null = null;
+	let root: ReturnType<typeof createRoot> | null = null;
 
 	// #region Overlay
 	const addOverlay = () => {
@@ -67,9 +67,22 @@ import VideoController from '@/content/VideoController';
 				removeOverlay();
 				chrome.runtime.sendMessage<Message>({ type: 'DEVICE_DISCONNECTED' });
 				break;
+			case 'GET_DEVICE_NAME': {
+				const name = deviceController?.getDevice()?.name;
+				const response: MessageResponse<'GET_DEVICE_NAME'> = { value: name };
+				sendResponse(response);
+				break;
+			}
+			case 'GET_VIDEO_TITLE': {
+				const title = videoController.getTitle();
+				const response: MessageResponse<'GET_VIDEO_TITLE'> = { value: title };
+				sendResponse(response);
+				break;
+			}
 			case 'GET_VIDEO_TIME': {
-				const time = videoController.getVideo()?.currentTime;
-				sendResponse(time == null ? -1 : time);
+				const time = videoController.getVideo()?.currentTime ?? -1;
+				const response: MessageResponse<'GET_VIDEO_TIME'> = { value: time };
+				sendResponse(response);
 				break;
 			}
 			case 'SEND_RGB_COMMAND':

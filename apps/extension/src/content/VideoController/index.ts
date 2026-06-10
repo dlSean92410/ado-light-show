@@ -31,19 +31,23 @@ class VideoController {
 		this.video = newVideo;
 		if (this.video)
 			chrome.runtime.sendMessage<Message>({
-				type: 'VIDEO_PLAYING_UPDATED',
+				type: 'SET_VIDEO_PLAYING',
 				value: !this.video.paused,
 			});
 	}
 	private start = () => {
-		chrome.runtime.sendMessage<Message>({ type: 'VIDEO_PLAYING_UPDATED', value: true });
+		chrome.runtime.sendMessage<Message>({ type: 'SET_VIDEO_PLAYING', value: true });
 	};
 	private stop = () => {
-		chrome.runtime.sendMessage<Message>({ type: 'VIDEO_PLAYING_UPDATED', value: false });
+		chrome.runtime.sendMessage<Message>({ type: 'SET_VIDEO_PLAYING', value: false });
 	};
 
 	public getVideo() {
 		return this.video;
+	}
+	public getTitle() {
+		const title = document.querySelector('h1.title yt-formatted-string');
+		return title?.textContent?.trim() || null;
 	}
 }
 

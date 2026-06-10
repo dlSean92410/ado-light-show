@@ -15,11 +15,14 @@
 			"js": ["src/content/index.tsx"]
 		}
 	],
-	"permissions": [],
+	"permissions": ["tabs"],
 	"web_accessible_resources": [
 		{
 			"matches": ["https://www.youtube.com/*"],
-			"resources": ["tutorial1.png", "tutorial2.jpeg"]
+			"resources": ["tutorial1.png", "tutorial2.jpeg", "command-encoder.wasm"]
 		}
-	]
+	],
+	"content_security_policy": {
+		"extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+	}
 }

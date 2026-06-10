@@ -1,20 +1,26 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { Message, Session } from '@/utility/type';
+import type { Device, Message, MessageResponse, Session } from '@/utility/type';
 
 const useSession = () => {
-	const [session, setSession] = useState<Session>({ status: 'DEACTIVATED' });
+	const [status, setStatus] = useState<Session['status']>('DEACTIVATED');
+	const [name, setName] = useState<string | null>(null);
+	const [deviceName, setDeviceName] = useState<Device['name'] | null>(null);
 
 	useEffect(() => {
-		chrome.runtime.sendMessage<Message, { session: Session }>(
+		chrome.runtime.sendMessage<Message, MessageResponse<'GET_SESSION'>>(
 			{ type: 'GET_SESSION' },
 			(message) => {
-				setSession(message.session);
+				setStatus(message.status);
+				setName(message.name ?? null);
+				setDeviceName(message.deviceName ?? null);
 			},
 		);
 
 		const handler = (message: Message) => {
 			if (message.type === 'SESSION_UPDATED') {
-				setSession(message.session);
+				setStatus(message.status);
+				setName(message.name ?? null);
+				setDeviceName(message.deviceName ?? null);
 			}
 		};
 
@@ -32,7 +38,9 @@ const useSession = () => {
 	}, []);
 
 	return {
-		session,
+		status,
+		name,
+		deviceName,
 		handleInitiateSession,
 		handleStopSession,
 	};

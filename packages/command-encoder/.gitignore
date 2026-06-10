@@ -1,0 +1,16 @@
+# AssemblyScript build output
+build/
+
+# AssemblyScript generated files (if you keep defaults)
+assembly/*.js
+assembly/*.d.ts
+
+# Node modules
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+Thumbs.db

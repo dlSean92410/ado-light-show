@@ -1,0 +1,23 @@
+{
+	"targets": {
+		"debug": {
+			"outFile": "build/command-encoder.debug.wasm",
+			"textFile": "build/command-encoder.debug.wat",
+			"sourceMap": true,
+			"debug": true
+		},
+		"release": {
+			"outFile": "build/command-encoder.wasm",
+			"textFile": "build/command-encoder.wat",
+			"sourceMap": true,
+			"optimizeLevel": 3,
+			"shrinkLevel": 0,
+			"converge": false,
+			"noAssert": false
+		}
+	},
+	"options": {
+		"bindings": "esm",
+		"exportRuntime": true
+	}
+}

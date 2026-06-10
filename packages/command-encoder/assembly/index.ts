@@ -1,0 +1,1 @@
+export { getColorCommand } from './command';

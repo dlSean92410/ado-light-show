@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { Keyframe, Message, Script, ScriptSource } from '@/utility/type';
+import type { Keyframe, Message, MessageResponse, Script, ScriptSource } from '@/utility/type';
+import { roundTime, sanitizeScript } from '@dl_sean/ado-light-show-common/src/script';
 
 const useScript = () => {
 	const [source, setSource] = useState<ScriptSource>('CUSTOM');
 	const [name, setName] = useState<Script['name']>(null);
 
 	useEffect(() => {
-		chrome.runtime.sendMessage<Message, { source: ScriptSource; script: Script }>(
+		chrome.runtime.sendMessage<Message, MessageResponse<'GET_SCRIPT'>>(
 			{ type: 'GET_SCRIPT' },
 			(message) => {
 				setSource(message.source);
@@ -25,7 +26,7 @@ const useScript = () => {
 	}, []);
 
 	const handleUpdateScriptSource = useCallback((newScriptSource: ScriptSource) => {
-		chrome.runtime.sendMessage<Message, { source: ScriptSource; name: Script['name'] }>(
+		chrome.runtime.sendMessage<Message, MessageResponse<'SET_SCRIPT'>>(
 			{ type: 'SET_SCRIPT', source: newScriptSource },
 			(message) => {
 				setSource(newScriptSource);
@@ -36,7 +37,7 @@ const useScript = () => {
 
 	// Update script data must be from 'CUSTOM' source
 	const handleUpdateScript = useCallback((newScript: Script) => {
-		chrome.runtime.sendMessage<Message, { source: ScriptSource; name: Script['name'] }>(
+		chrome.runtime.sendMessage<Message, MessageResponse<'SET_SCRIPT'>>(
 			{ type: 'SET_SCRIPT', source: 'CUSTOM', script: newScript },
 			(message) => {
 				setSource(message.source);
@@ -55,17 +56,14 @@ const useScript = () => {
 				try {
 					const parsed = JSON.parse(event.target?.result as string);
 					if (Array.isArray(parsed)) {
-						console.debug('Loaded script:', parsed);
-						const data = parsed.map(
-							(kf: Keyframe): Keyframe => ({
-								...kf,
-								time:
-									kf.mode === 'pulse'
-										? Number((kf.time - kf.offsets[0]).toFixed(4))
-										: Number(kf.time.toFixed(4)),
-							}),
-						);
+						const data = sanitizeScript(parsed).map((kf: Keyframe) => {
+							// Convert pulse time from peak to start
+							const time =
+								kf.mode === 'pulse' ? roundTime(kf.time - kf.offsets[0]) : kf.time;
+							return { ...kf, time };
+						});
 
+						console.debug('Loaded script:', data);
 						handleUpdateScript({ name: file.name, data });
 					}
 				} catch (err) {

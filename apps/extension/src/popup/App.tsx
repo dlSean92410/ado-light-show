@@ -1,13 +1,23 @@
-import '@/style/global.css';
+import '@dl_sean/ado-light-show-common/src/global.css';
 
 import useSession from '@/popup/hook/useSession';
 import useScript from '@/popup/hook/useScript';
 import { SCRIPT_SOURCES } from '@/utility/constant';
 import type { ScriptSource } from '@/utility/type';
+import useTab from '@/popup/hook/useTab';
 
 export default function App() {
-	const { session, handleInitiateSession, handleStopSession } = useSession();
-	const isSessionActive = session.status === 'ACTIVATED';
+	const { isActive: isActiveTab } = useTab();
+
+	const {
+		status: sessionStatus,
+		name: sessionName,
+		deviceName,
+		handleInitiateSession,
+		handleStopSession,
+	} = useSession();
+	const isSessionActive = sessionStatus === 'ACTIVATED';
+
 	const {
 		source: scriptSource,
 		name: scriptName,
@@ -17,10 +27,17 @@ export default function App() {
 
 	return (
 		<div className="flex-column" style={{ gap: '1rem', padding: '0.5rem' }}>
-			{isSessionActive && (
+			{!isActiveTab && isSessionActive && (
 				<div className="marquee">
-					<span className="marquee-content">{session.name}</span>
-					<span className="marquee-content">{session.name}</span>
+					<span className="marquee-content">Device is connected on a different tab</span>
+					<span className="marquee-content">Device is connected on a different tab</span>
+				</div>
+			)}
+
+			{isActiveTab && isSessionActive && (
+				<div className="marquee">
+					<span className="marquee-content">{sessionName}</span>
+					<span className="marquee-content">{sessionName}</span>
 				</div>
 			)}
 
@@ -38,7 +55,7 @@ export default function App() {
 				{isSessionActive && (
 					<div className="row">
 						<label>Name</label>
-						<span>{session.deviceName}</span>
+						<span>{deviceName}</span>
 					</div>
 				)}
 
@@ -78,6 +95,11 @@ export default function App() {
 					<div className="row">
 						<label>Name</label>
 						<span>{scriptName}</span>
+					</div>
+				)}
+				{scriptName == null && scriptSource === 'REMOTE' && (
+					<div className="row">
+						<span>No script found</span>
 					</div>
 				)}
 
