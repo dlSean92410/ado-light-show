@@ -31,15 +31,15 @@ class VideoController {
 		this.video = newVideo;
 		if (this.video)
 			chrome.runtime.sendMessage<Message>({
-				type: 'SET_VIDEO_PLAYING',
+				type: 'SET_LIGHT_ENGINE_STATE',
 				value: !this.video.paused,
 			});
 	}
 	private start = () => {
-		chrome.runtime.sendMessage<Message>({ type: 'SET_VIDEO_PLAYING', value: true });
+		chrome.runtime.sendMessage<Message>({ type: 'SET_LIGHT_ENGINE_STATE', value: true });
 	};
 	private stop = () => {
-		chrome.runtime.sendMessage<Message>({ type: 'SET_VIDEO_PLAYING', value: false });
+		chrome.runtime.sendMessage<Message>({ type: 'SET_LIGHT_ENGINE_STATE', value: false });
 	};
 
 	public getVideo() {

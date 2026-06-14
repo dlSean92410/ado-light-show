@@ -55,17 +55,19 @@ import VideoController from '@/content/VideoController';
 	// #endregion
 
 	chrome.runtime.onMessage.addListener((message: Message, _sender, sendResponse) => {
-		console.debug('Ado Light Show extension content - onMessage', message);
+		console.debug('Ado Light Show extension content - onMessage', { message });
 
 		switch (message.type) {
-			case 'ACTIVATE':
+			case 'PING':
+				sendResponse({ pong: true });
+				break;
+			case 'START_PAIRING_PROCESS':
 				addOverlay();
 				break;
-			case 'DEACTIVATE':
+			case 'STOP_SESSION':
 				deviceController?.destroy();
 				deviceController = null;
 				removeOverlay();
-				chrome.runtime.sendMessage<Message>({ type: 'DEVICE_DISCONNECTED' });
 				break;
 			case 'GET_DEVICE_NAME': {
 				const name = deviceController?.getDevice()?.name;

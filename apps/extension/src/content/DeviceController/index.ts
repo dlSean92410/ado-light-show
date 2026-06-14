@@ -14,7 +14,7 @@ class DeviceController {
 
 		this.device.addEventListener('gattserverdisconnected', () => {
 			this.destroy();
-			chrome.runtime.sendMessage<Message>({ type: 'DEVICE_DISCONNECTED' });
+			chrome.runtime.sendMessage<Message>({ type: 'STOP_SESSION' });
 		});
 	}
 

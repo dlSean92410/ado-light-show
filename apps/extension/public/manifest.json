@@ -15,7 +15,7 @@
 			"js": ["src/content/index.tsx"]
 		}
 	],
-	"permissions": ["tabs"],
+	"permissions": ["tabs", "scripting"],
 	"web_accessible_resources": [
 		{
 			"matches": ["https://www.youtube.com/*"],

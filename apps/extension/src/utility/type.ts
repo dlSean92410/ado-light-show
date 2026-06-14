@@ -1,10 +1,10 @@
 import type { Keyframe } from '@dl_sean/ado-light-show-common/src/type';
 
 type Message =
-	// Tab
-	| { type: 'GET_TAB' }
 	// Session
 	| { type: 'GET_SESSION' }
+	| { type: 'START_SESSION' }
+	| { type: 'STOP_SESSION' }
 	| ({ type: 'SESSION_UPDATED' } & MessageResponse<'GET_SESSION'>)
 	// Script
 	| { type: 'GET_SCRIPT' }
@@ -15,25 +15,16 @@ type Message =
 	// Video
 	| { type: 'GET_VIDEO_TITLE' }
 	| { type: 'GET_VIDEO_TIME' }
-	| { type: 'SET_VIDEO_PLAYING'; value: boolean }
 	// Command
 	| { type: 'SEND_RGB_COMMAND'; value: string }
 	// Content Script
-	| { type: 'ACTIVATE' }
-	| { type: 'DEACTIVATE' }
+	| { type: 'START_PAIRING_PROCESS' }
+	| { type: 'PING' }
 	// Background Script
-	| { type: 'DEVICE_CONNECTED'; device: Device }
-	| { type: 'DEVICE_DISCONNECTED' };
+	| { type: 'SET_LIGHT_ENGINE_STATE'; value: boolean };
 type Response =
-	// Tab
-	| { type: 'GET_TAB'; value: chrome.tabs.Tab | null }
 	// Session
-	| {
-			type: 'GET_SESSION';
-			status: Session['status'];
-			name?: string | null;
-			deviceName?: Device['name'] | null;
-	  }
+	| { type: 'GET_SESSION'; session: Session }
 	// Script
 	| { type: 'GET_SCRIPT'; source: ScriptSource; script: Script }
 	| { type: 'SET_SCRIPT'; source: ScriptSource; name: Script['name'] }
@@ -41,11 +32,14 @@ type Response =
 	| { type: 'GET_DEVICE_NAME'; value: Device['name'] }
 	// Video
 	| { type: 'GET_VIDEO_TITLE'; value: string | null }
-	| { type: 'GET_VIDEO_TIME'; value: number };
+	| { type: 'GET_VIDEO_TIME'; value: number }
+	// Content Script
+	| { type: 'PING'; pong: boolean };
+
 type MessageResponse<T extends Response['type']> = Omit<Extract<Response, { type: T }>, 'type'>;
 
 type Device = { id: BluetoothDevice['id']; name: BluetoothDevice['name'] };
-type Session = { status: 'ACTIVATED'; tabID: number } | { status: 'DEACTIVATED' };
+type Session = { isActive: true; tabID: number } | { isActive: false };
 
 type ScriptSource = 'CUSTOM' | 'REMOTE';
 type Script = {

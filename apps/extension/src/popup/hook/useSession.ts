@@ -1,26 +1,40 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Device, Message, MessageResponse, Session } from '@/utility/type';
+import { getCurrentTab, getDeviceName, getVideoTitle } from '@/utility/helper';
 
 const useSession = () => {
-	const [status, setStatus] = useState<Session['status']>('DEACTIVATED');
-	const [name, setName] = useState<string | null>(null);
+	const [session, setSession] = useState<Session>({ isActive: false });
+	const [videoTitle, setVideoTitle] = useState<string | null>(null);
 	const [deviceName, setDeviceName] = useState<Device['name'] | null>(null);
 
 	useEffect(() => {
+		const handleSessionUpdate = async (session: Session) => {
+			const newSession = session;
+			setSession(newSession);
+
+			const newVideoTitle = newSession.isActive
+				? await getVideoTitle(newSession.tabID)
+				: null;
+			setVideoTitle(newVideoTitle ?? null);
+
+			const newDeviceName = newSession.isActive
+				? await getDeviceName(newSession.tabID)
+				: null;
+			setDeviceName(newDeviceName ?? null);
+		};
+
 		chrome.runtime.sendMessage<Message, MessageResponse<'GET_SESSION'>>(
 			{ type: 'GET_SESSION' },
-			(message) => {
-				setStatus(message.status);
-				setName(message.name ?? null);
-				setDeviceName(message.deviceName ?? null);
+			async (message) => {
+				if (chrome.runtime.lastError) return;
+
+				handleSessionUpdate(message.session);
 			},
 		);
 
 		const handler = (message: Message) => {
 			if (message.type === 'SESSION_UPDATED') {
-				setStatus(message.status);
-				setName(message.name ?? null);
-				setDeviceName(message.deviceName ?? null);
+				handleSessionUpdate(message.session);
 			}
 		};
 
@@ -28,20 +42,24 @@ const useSession = () => {
 		return () => chrome.runtime.onMessage.removeListener(handler);
 	}, []);
 
-	const handleInitiateSession = useCallback(() => {
-		chrome.runtime.sendMessage<Message>({ type: 'ACTIVATE' });
+	const handleStartSession = useCallback(async () => {
+		const tab = await getCurrentTab();
+		if (session.isActive || tab?.id == null) return;
+
+		chrome.tabs.sendMessage<Message>(tab.id, { type: 'START_PAIRING_PROCESS' });
 		window.close();
-	}, []);
+	}, [session.isActive]);
 
 	const handleStopSession = useCallback(() => {
-		chrome.runtime.sendMessage<Message>({ type: 'DEACTIVATE' });
+		chrome.runtime.sendMessage<Message>({ type: 'STOP_SESSION' });
 	}, []);
 
 	return {
-		status,
-		name,
+		tabID: session.isActive ? session.tabID : null,
+		isActive: session.isActive,
+		videoTitle,
 		deviceName,
-		handleInitiateSession,
+		handleStartSession,
 		handleStopSession,
 	};
 };

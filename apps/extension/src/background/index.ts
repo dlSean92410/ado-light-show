@@ -1,4 +1,5 @@
 import type { Message, MessageResponse, Session } from '@/utility/type';
+import { getCurrentTab, getVideoID } from '@/utility/helper';
 import LightEngine from '@/background/LightEngine';
 import { initCommandEncoder } from '@dl_sean/ado-light-show-common/src/command-encoder-wrapper';
 
@@ -7,158 +8,72 @@ import { initCommandEncoder } from '@dl_sean/ado-light-show-common/src/command-e
 		console.debug('Ado Light Show extension installed');
 	});
 
-	let session: Session = { status: 'DEACTIVATED' };
+	let session: Session = { isActive: false };
+	/**
+	 * Callback used by LightEngine loop to get current active tab ID.
+	 * Rather than a fixed tabID when .start() is called, this allows the loop to evaluate the tabID from session on each iteration.
+	 */
+	const getTabID = () => {
+		if (!session.isActive) return null;
+		return session.tabID;
+	};
 	const encoderWrapper = await initCommandEncoder(chrome.runtime.getURL('command-encoder.wasm'));
 	const lightEngine: LightEngine = new LightEngine(encoderWrapper);
 
 	chrome.runtime.onMessage.addListener((message: Message, sender, sendResponse) => {
-		console.debug('Ado Light Show extension background - onMessage - Session', sender, session);
-		console.debug('Ado Light Show extension background - onMessage', message);
+		console.debug('Ado Light Show extension background - onMessage', {
+			session,
+			message,
+			sender,
+		});
 
 		(async () => {
 			try {
 				switch (message.type) {
-					case 'ACTIVATE':
-						if (session.status === 'ACTIVATED') break;
+					case 'START_SESSION': {
+						if (sender.tab?.id == null) break;
 
-						chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-							const activeTabID = tabs[0]?.id;
-							if (activeTabID == null) return;
-							chrome.tabs.sendMessage<Message>(activeTabID, { type: 'ACTIVATE' });
+						session = { isActive: true, tabID: sender.tab.id };
+						chrome.runtime.sendMessage<Message>({ type: 'SESSION_UPDATED', session });
+
+						console.debug('Ado Light Show extension background - lightEngine.start', {
+							session,
 						});
-						break;
-					case 'DEACTIVATE':
-						if (session.status === 'DEACTIVATED') break;
-
-						chrome.tabs.sendMessage<Message>(session.tabID, { type: 'DEACTIVATE' });
-						break;
-					case 'DEVICE_CONNECTED': {
-						if (session.status === 'ACTIVATED' || sender.tab?.id == null) break;
-
-						session = { status: 'ACTIVATED', tabID: sender.tab.id };
-
-						const tabID = session.tabID;
-						const { value: deviceName } = await new Promise<
-							MessageResponse<'GET_DEVICE_NAME'>
-						>((resolve) => {
-							chrome.tabs.sendMessage<Message, MessageResponse<'GET_DEVICE_NAME'>>(
-								tabID,
-								{ type: 'GET_DEVICE_NAME' },
-								(response) => resolve(response),
-							);
-						});
-						const { value: videoTitle } = await new Promise<
-							MessageResponse<'GET_VIDEO_TITLE'>
-						>((resolve) => {
-							chrome.tabs.sendMessage<Message, MessageResponse<'GET_VIDEO_TITLE'>>(
-								tabID,
-								{ type: 'GET_VIDEO_TITLE' },
-								(response) => resolve(response),
-							);
-						});
-						chrome.runtime.sendMessage<Message>({
-							type: 'SESSION_UPDATED',
-							status: session.status,
-							name: videoTitle,
-							deviceName: deviceName,
-						});
-
+						lightEngine.start(getTabID);
 						break;
 					}
-					case 'DEVICE_DISCONNECTED': {
-						session = { status: 'DEACTIVATED' };
-						chrome.runtime.sendMessage<Message>({
-							type: 'SESSION_UPDATED',
-							status: session.status,
-						});
-
-						const { source, script } = await lightEngine.setScript(session);
-						chrome.runtime.sendMessage<Message>({
-							type: 'SCRIPT_UPDATED',
-							source,
-							script,
-						});
-						break;
-					}
-					case 'GET_TAB': {
-						let response: MessageResponse<'GET_TAB'> = { value: null };
-
-						if (session.status === 'ACTIVATED') {
-							const tabID = session.tabID;
-
-							response = await new Promise<MessageResponse<'GET_TAB'>>((resolve) => {
-								chrome.tabs.get(tabID, (tab) => {
-									resolve({ value: tab });
-								});
+					case 'STOP_SESSION': {
+						if (session.isActive)
+							chrome.tabs.sendMessage<Message>(session.tabID, {
+								type: 'STOP_SESSION',
 							});
-						}
 
-						console.debug('Ado Light Show extension background - GET_TAB', response);
-						sendResponse(response);
+						session = { isActive: false };
+						chrome.runtime.sendMessage<Message>({ type: 'SESSION_UPDATED', session });
+
+						lightEngine.destroy();
 						break;
 					}
 					case 'GET_SESSION': {
-						console.debug('Ado Light Show extension background - GET_SESSION', session);
-
-						// Sometimes the background script loses session info, try to recover it
-						const tabID =
-							session.status === 'ACTIVATED'
-								? session.tabID
-								: await new Promise<number | null>((resolve) => {
-										chrome.tabs.query(
-											{ active: true, currentWindow: true },
-											(tabs) => {
-												const activeTabID = tabs[0]?.id;
-												resolve(activeTabID ?? null);
-											},
-										);
-									});
-						if (tabID == null) {
-							const activeResponse: MessageResponse<'GET_SESSION'> = {
-								status: session.status,
-							};
-							sendResponse(activeResponse);
-							break;
-						}
-
-						const { value: deviceName } = await new Promise<
-							MessageResponse<'GET_DEVICE_NAME'>
-						>((resolve) => {
-							chrome.tabs.sendMessage<Message, MessageResponse<'GET_DEVICE_NAME'>>(
-								tabID,
-								{ type: 'GET_DEVICE_NAME' },
-								(response) => resolve(response ?? { value: null }),
-							);
-						});
-						const { value: videoTitle } = await new Promise<
-							MessageResponse<'GET_VIDEO_TITLE'>
-						>((resolve) => {
-							chrome.tabs.sendMessage<Message, MessageResponse<'GET_VIDEO_TITLE'>>(
-								tabID,
-								{ type: 'GET_VIDEO_TITLE' },
-								(response) => resolve(response ?? { value: null }),
-							);
-						});
-
-						const activeResponse: MessageResponse<'GET_SESSION'> = {
-							status: session.status,
-							name: videoTitle,
-							deviceName,
-						};
-						console.debug(
-							'Ado Light Show extension background - GET_SESSION',
-							activeResponse,
-						);
-						sendResponse(activeResponse);
+						const response: MessageResponse<'GET_SESSION'> = { session };
+						sendResponse(response);
 						break;
 					}
 					case 'SET_SCRIPT': {
 						const { source, script } = message;
 						lightEngine.setScriptSource(source);
-						await lightEngine.setScript(session, script);
-						const name = lightEngine.getScript().name;
 
-						const response: MessageResponse<'SET_SCRIPT'> = { source, name };
+						const tab = session.isActive
+							? { id: session.tabID }
+							: await getCurrentTab();
+						const videoID = tab?.id != null ? await getVideoID(tab.id) : null;
+						const { source: newSource, script: newScript } =
+							await lightEngine.setScript({ videoID, script });
+
+						const response: MessageResponse<'SET_SCRIPT'> = {
+							source: newSource,
+							name: newScript.name,
+						};
 						sendResponse(response);
 						break;
 					}
@@ -170,9 +85,14 @@ import { initCommandEncoder } from '@dl_sean/ado-light-show-common/src/command-e
 						sendResponse(response);
 						break;
 					}
-					case 'SET_VIDEO_PLAYING':
-						if (message.value) lightEngine.start(session);
-						else lightEngine.stop();
+					case 'SET_LIGHT_ENGINE_STATE':
+						if (!session.isActive || sender.tab?.id !== session.tabID) break;
+
+						if (message.value) {
+							lightEngine.start(getTabID);
+						} else {
+							lightEngine.stop();
+						}
 						break;
 					default:
 						break;
@@ -186,8 +106,31 @@ import { initCommandEncoder } from '@dl_sean/ado-light-show-common/src/command-e
 		return true;
 	});
 
-	chrome.tabs.onActivated.addListener(async () => {
-		const { source, script } = await lightEngine.setScript(session);
+	chrome.tabs.onActivated.addListener(async ({ tabId }) => {
+		if (session.isActive && session.tabID !== tabId) return;
+
+		const tabID = session.isActive ? session.tabID : tabId;
+		const videoID = tabID != null ? await getVideoID(tabID) : null;
+		const { source, script } = await lightEngine.setScript({ videoID });
 		chrome.runtime.sendMessage<Message>({ type: 'SCRIPT_UPDATED', source, script });
+	});
+
+	chrome.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
+		if (!changeInfo.url) return;
+		if (session.isActive && session.tabID !== tabId) return;
+
+		const tabID = session.isActive ? session.tabID : tabId;
+		const videoID = tabID != null ? await getVideoID(tabID) : null;
+		const { source, script } = await lightEngine.setScript({ videoID });
+		chrome.runtime.sendMessage<Message>({ type: 'SCRIPT_UPDATED', source, script });
+	});
+
+	chrome.tabs.onRemoved.addListener(async (tabId) => {
+		if (session.isActive && session.tabID !== tabId) return;
+
+		session = { isActive: false };
+		chrome.runtime.sendMessage<Message>({ type: 'SESSION_UPDATED', session });
+
+		lightEngine.destroy();
 	});
 })();
