@@ -1,4 +1,4 @@
-import { REMOTE_SCRIPTS } from '@/utility/constant';
+import { REMOTE_SCRIPT_BASE_URL } from '@/utility/constant';
 import type { Keyframe, Message, Script, ScriptSource } from '@/utility/type';
 import { getCurrentTab, getVideoID, getVideoTime } from '@/utility/helper';
 
@@ -11,6 +11,8 @@ import {
 import type { CommandEncoderWrapper } from '@dl_sean/ado-light-show-common/src/command-encoder-wrapper';
 
 class LightEngine {
+	private scriptIndexCache: Record<string, { name: string; file: string }> | null = null;
+
 	private static readonly SCRIPTS_DEFAULT: Record<ScriptSource, Script> = Object.freeze({
 		CUSTOM: { name: null, data: null },
 		REMOTE: { name: null, data: null },
@@ -109,14 +111,28 @@ class LightEngine {
 
 		return { source: this.scriptSource, script: this.scripts[this.scriptSource] };
 	};
-	private getRemoteScript = async (videoID: string) => {
-		const remoteScript = REMOTE_SCRIPTS[videoID];
-		if (remoteScript == null) return null;
-
-		const res = await fetch(remoteScript.url);
-		if (!res.ok) return null;
+	private async loadScriptIndex() {
+		if (this.scriptIndexCache) return this.scriptIndexCache;
 
 		try {
+			const res = await fetch(`${REMOTE_SCRIPT_BASE_URL}/index.json`);
+			if (!res.ok) throw new Error(`${res.status} - ${res.url}`);
+
+			this.scriptIndexCache = await res.json();
+			return this.scriptIndexCache;
+		} catch (error) {
+			console.error(error);
+			return null;
+		}
+	}
+	private getRemoteScript = async (videoID: string) => {
+		try {
+			const scriptIndex = await this.loadScriptIndex();
+			if (!scriptIndex?.[videoID]) throw new Error(`${videoID} not found in script index`);
+
+			const res = await fetch(`${REMOTE_SCRIPT_BASE_URL}/${scriptIndex[videoID].file}`);
+			if (!res.ok) throw new Error(`${res.status} - ${res.url}`);
+
 			const parsed = await res.json();
 
 			if (Array.isArray(parsed)) {
@@ -127,7 +143,7 @@ class LightEngine {
 				});
 				console.debug('Loaded script:', data);
 
-				return { name: remoteScript.name, data };
+				return { name: scriptIndex[videoID].name, data };
 			}
 
 			return null;
