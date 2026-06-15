@@ -2,6 +2,13 @@
 	"manifest_version": 3,
 	"name": "Ado Light Show",
 	"version": "1.0.0",
+	"icons": {
+		"16": "icon16.png",
+		"32": "icon32.png",
+		"48": "icon48.png",
+		"128": "icon128.png"
+	},
+	"description": "This extension uses your Ado penlight and custom made scripts to enhance the experience of watching Ado's music videos on YouTube.",
 	"action": {
 		"default_popup": "src/popup/index.html"
 	},
