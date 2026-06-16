@@ -94,4 +94,11 @@ import VideoController from '@/content/VideoController';
 				break;
 		}
 	});
+
+	window.addEventListener('beforeunload', () => {
+		deviceController?.destroy();
+		deviceController = null;
+		removeOverlay();
+		chrome.runtime.sendMessage<Message>({ type: 'STOP_SESSION' });
+	});
 })();
