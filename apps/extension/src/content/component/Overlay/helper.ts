@@ -31,15 +31,6 @@ const getCharacteristic = async (device: BluetoothDevice) => {
 };
 
 const initDeviceController = async () => {
-	// if (true) {
-	// 	const device = {
-	// 		id: 'dummyId',
-	// 		name: 'dummyName',
-	// 	} as BluetoothDevice;
-	// 	const characteristic = {} as BluetoothRemoteGATTCharacteristic;
-	// 	return new DeviceController(device, characteristic);
-	// }
-
 	const device = await handleDeviceConnect();
 	if (!device) return;
 

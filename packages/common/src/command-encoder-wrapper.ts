@@ -1,5 +1,3 @@
-import { bytesToHex } from './command';
-
 export interface CommandEncoderWrapper {
 	getColorCommand(hex: string): string;
 }
@@ -22,7 +20,6 @@ export async function initCommandEncoder(wasmUrl: string) {
 	const { instance } = await WebAssembly.instantiate(bytes, imports);
 	const wasm = instance.exports as any;
 	const memory = wasm.memory as WebAssembly.Memory;
-	const view = new DataView(memory.buffer);
 
 	function writeString(str: string): number {
 		const len = str.length;
