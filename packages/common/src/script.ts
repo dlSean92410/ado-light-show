@@ -58,8 +58,8 @@ const sanitizePulseKeyframe = <T extends PulseKeyframe>(
 
 	// Offset clamp
 	if (next) {
-		const end = newKF.time + inOffset + outOffset;
-		const overflow = end - next.time;
+		const end = newKF.time + outOffset;
+		const overflow = end - next.time - (next.mode === 'pulse' ? next.offsets[0] : 0);
 		const outInRatio = outOffset / inOffset;
 
 		if (overflow > 0) {
