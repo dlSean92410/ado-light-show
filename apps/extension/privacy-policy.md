@@ -1,6 +1,6 @@
 # Privacy Policy for Ado Light Show
 
-_Last updated: 2026/06/15_
+_Last updated: 2026/06/24_
 
 ## Data Collection
 
@@ -11,7 +11,6 @@ This extension **does not collect, store, or transmit any personal data** to ext
 The extension requires the following permissions:
 
 - **tabs**: To detect when you're on YouTube
-- **scripting**: To inject light show functionality into YouTube pages
 - **youtube.com access**: To synchronize lights with YouTube videos
 
 These permissions are used solely for the extension's core functionality.
