@@ -22,7 +22,7 @@
 			"js": ["src/content/index.tsx"]
 		}
 	],
-	"permissions": ["tabs", "scripting"],
+	"permissions": ["tabs"],
 	"web_accessible_resources": [
 		{
 			"matches": ["https://www.youtube.com/*"],
