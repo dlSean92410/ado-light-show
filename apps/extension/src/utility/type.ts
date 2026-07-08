@@ -24,7 +24,7 @@ type Message =
 	| { type: 'SET_LIGHT_ENGINE_STATE'; value: boolean }
 	// Device Tab
 	| { type: 'GET_DEVICE_TAB' }
-	| { type: 'OPEN_DEVICE_TAB' }
+	| { type: 'FOCUS_DEVICE_TAB' }
 	| ({ type: 'DEVICE_TAB_UPDATED' } & MessageResponse<'GET_DEVICE_TAB'>);
 type Response =
 	// Session
@@ -40,7 +40,7 @@ type Response =
 	// Content Script
 	| { type: 'PING'; pong: boolean }
 	// Device Tab
-	| { type: 'GET_DEVICE_TAB'; id: number | null; deviceCount: number };
+	| { type: 'GET_DEVICE_TAB'; deviceCount: number };
 
 type MessageResponse<T extends Response['type']> = Omit<Extract<Response, { type: T }>, 'type'>;
 
