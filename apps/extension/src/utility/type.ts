@@ -21,7 +21,11 @@ type Message =
 	| { type: 'START_PAIRING_PROCESS' }
 	| { type: 'PING' }
 	// Background Script
-	| { type: 'SET_LIGHT_ENGINE_STATE'; value: boolean };
+	| { type: 'SET_LIGHT_ENGINE_STATE'; value: boolean }
+	// Device Tab
+	| { type: 'GET_DEVICE_TAB' }
+	| { type: 'OPEN_DEVICE_TAB' }
+	| ({ type: 'DEVICE_TAB_UPDATED' } & MessageResponse<'GET_DEVICE_TAB'>);
 type Response =
 	// Session
 	| { type: 'GET_SESSION'; session: Session }
@@ -34,7 +38,9 @@ type Response =
 	| { type: 'GET_VIDEO_TITLE'; value: string | null }
 	| { type: 'GET_VIDEO_TIME'; value: number }
 	// Content Script
-	| { type: 'PING'; pong: boolean };
+	| { type: 'PING'; pong: boolean }
+	// Device Tab
+	| { type: 'GET_DEVICE_TAB'; id: number | null; deviceCount: number };
 
 type MessageResponse<T extends Response['type']> = Omit<Extract<Response, { type: T }>, 'type'>;
 
