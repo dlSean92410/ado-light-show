@@ -1,6 +1,6 @@
+import { getVideoId, getCurrentTab, getVideoTime } from '@/background/helper';
 import { REMOTE_SCRIPT_BASE_URL } from '@/utility/constant';
 import type { Keyframe, Message, Script, ScriptSource } from '@/utility/type';
-import { getCurrentTab, getVideoID, getVideoTime } from '@/utility/helper';
 
 import { rgbToHex } from '@dl_sean/ado-light-show-common/src/color';
 import { roundTime, sanitizeScript } from '@dl_sean/ado-light-show-common/src/script';
@@ -27,18 +27,24 @@ class LightEngine {
 		this.wrapper = wrapper;
 	}
 
-	public start = (getTabID: () => number | null) => {
-		if (this.loopID != null) return;
+	public start = ({
+		videoTabId,
+		deviceTabId,
+	}: {
+		videoTabId: number | null;
+		deviceTabId: number | null;
+	}) => {
+		if (
+			this.scripts[this.scriptSource].data == null ||
+			this.loopID != null ||
+			videoTabId == null ||
+			deviceTabId == null
+		)
+			return;
 
 		this.loopID = setInterval(() => {
-			const keyframes = this.scripts[this.scriptSource].data;
-			if (keyframes == null) return;
-
-			const tabID = getTabID();
-			if (tabID == null) return;
-
-			this.loop(keyframes, tabID);
-		}, 16); // ~60Hz
+			this.loop(videoTabId, deviceTabId);
+		}, 16);
 	};
 
 	public stop = () => {
@@ -48,9 +54,10 @@ class LightEngine {
 		this.loopID = null;
 	};
 
-	private loop = async (keyframes: Keyframe[], tabID: number) => {
-		const time = await getVideoTime(tabID);
-		if (time == null) return;
+	private loop = async (videoTabId: number, deviceTabId: number) => {
+		const keyframes = this.scripts[this.scriptSource].data;
+		const time = await getVideoTime(videoTabId);
+		if (keyframes == null || time == null) return;
 
 		const currentKFIndex = getCurrentKeyframeIndex(keyframes, time);
 		const currentKF = keyframes[currentKFIndex ?? -1] ?? null;
@@ -64,18 +71,14 @@ class LightEngine {
 		if (command == null) return;
 
 		console.debug('Ado Light Show extension background - SEND_RGB_COMMAND', { command });
-		chrome.tabs.sendMessage<Message>(tabID, { type: 'SEND_RGB_COMMAND', value: command });
+		chrome.tabs.sendMessage<Message>(deviceTabId, { type: 'SEND_RGB_COMMAND', value: command });
 	};
 
 	public async destroy() {
 		this.stop();
 		this.scriptSource = 'REMOTE';
 		this.loopID = null;
-
-		const tab = await getCurrentTab();
-		const videoID = tab?.id != null ? await getVideoID(tab.id) : null;
-		const { source, script } = await this.setScript({ videoID });
-		chrome.runtime.sendMessage<Message>({ type: 'SCRIPT_UPDATED', source, script });
+		this.syncScript();
 	}
 
 	public getScriptSource() {
@@ -87,8 +90,8 @@ class LightEngine {
 	public setScriptSource(source: ScriptSource) {
 		this.scriptSource = source;
 	}
-	public setScript = async (params: { videoID?: string | null; script?: Script }) => {
-		const { videoID, script } = params;
+	public setScript = async (params: { videoId?: string | null; script?: Script }) => {
+		const { videoId, script } = params;
 
 		switch (this.scriptSource) {
 			case 'CUSTOM':
@@ -97,12 +100,12 @@ class LightEngine {
 				this.scripts[this.scriptSource] = script;
 				break;
 			case 'REMOTE': {
-				if (videoID == null) {
+				if (videoId == null) {
 					this.scripts[this.scriptSource] = LightEngine.SCRIPTS_DEFAULT.REMOTE;
 					break;
 				}
 
-				const remoteScript = await this.getRemoteScript(videoID);
+				const remoteScript = await this.getRemoteScript(videoId);
 				this.scripts[this.scriptSource] =
 					remoteScript ?? LightEngine.SCRIPTS_DEFAULT.REMOTE;
 				break;
@@ -111,6 +114,13 @@ class LightEngine {
 
 		return { source: this.scriptSource, script: this.scripts[this.scriptSource] };
 	};
+	public async syncScript() {
+		const currentTabId = (await getCurrentTab())?.id ?? null;
+		const videoId = currentTabId != null ? await getVideoId(currentTabId) : null;
+		const { source, script } = await this.setScript({ videoId });
+
+		chrome.runtime.sendMessage<Message>({ type: 'SCRIPT_UPDATED', source, name: script.name });
+	}
 	private async loadScriptIndex() {
 		if (this.scriptIndexCache) return this.scriptIndexCache;
 
