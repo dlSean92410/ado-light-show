@@ -24,7 +24,6 @@ const useDeviceTab = () => {
 
 	const handleTabFocus = useCallback(async () => {
 		chrome.runtime.sendMessage<Message>({ type: 'FOCUS_DEVICE_TAB' });
-		window.close();
 	}, []);
 
 	return {
