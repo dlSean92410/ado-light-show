@@ -16,6 +16,11 @@ export default defineConfig({
 		outDir: 'dist',
 		emptyOutDir: true,
 		cssCodeSplit: false, // prevent css files generation from content script
+		rollupOptions: {
+			input: {
+				penlightManager: resolve(__dirname, 'src/page/penlight-manager/index.html'),
+			},
+		},
 	},
 	assetsInclude: ['**/*.wasm'],
 });
