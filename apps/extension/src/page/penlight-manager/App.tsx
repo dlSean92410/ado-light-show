@@ -1,4 +1,5 @@
 import '@dl_sean/ado-light-show-common/src/global.css';
+import { PENLIGHT_MANUAL_URL } from '@/utility/constant';
 import ScriptSection from '@/page/component/ScriptSection';
 import type DeviceController from '@/page/penlight-manager/DeviceController';
 import type { Message } from '@/utility/type';
@@ -58,7 +59,7 @@ export default function App() {
 						<span>
 							Need help using your device?
 							<a
-								href="https://github.com/dlSean92410/ado-light-show/raw/main/assets/penlight_manual.png"
+								href={PENLIGHT_MANUAL_URL}
 								target="_blank"
 								style={{ marginInlineStart: '0.5rem' }}
 							>
