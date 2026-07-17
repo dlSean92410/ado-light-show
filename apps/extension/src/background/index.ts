@@ -81,11 +81,15 @@ import { PENLIGHT_MANAGER_PATH } from '@/utility/constant';
 					}
 					case 'FOCUS_DEVICE_TAB': {
 						if (deviceTabId != null) {
-							chrome.tabs.update(deviceTabId, { active: true });
+							const tab = await chrome.tabs.get(deviceTabId);
+							await chrome.windows.update(tab.windowId, { focused: true });
+							await chrome.tabs.update(tab.id, { active: true });
 							break;
 						}
 
+						const window = await chrome.windows.getCurrent();
 						const tab = await chrome.tabs.create({
+							windowId: window.id,
 							url: chrome.runtime.getURL(PENLIGHT_MANAGER_PATH),
 							pinned: true,
 						});
@@ -124,7 +128,9 @@ import { PENLIGHT_MANAGER_PATH } from '@/utility/constant';
 					case 'FOCUS_VIDEO_TAB': {
 						if (videoTabId == null) break;
 
-						chrome.tabs.update(videoTabId, { active: true });
+						const tab = await chrome.tabs.get(videoTabId);
+						await chrome.windows.update(tab.windowId, { focused: true });
+						await chrome.tabs.update(tab.id, { active: true });
 
 						break;
 					}
