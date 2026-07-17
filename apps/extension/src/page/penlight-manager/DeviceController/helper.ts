@@ -1,5 +1,15 @@
-import DeviceController from '@/content/DeviceController';
 import { DEVICE_NAME, SERVICE_UUID } from '@/utility/constant';
+import DeviceController from '@/page/penlight-manager/DeviceController';
+
+const isSameCommand = (cmd1: Uint8Array<ArrayBuffer>, cmd2: Uint8Array<ArrayBuffer>) => {
+	if (cmd1.length !== cmd2.length) return false;
+
+	for (let i = 0; i < cmd2.length; i++) {
+		if (cmd1[i] !== cmd2[i]) return false;
+	}
+
+	return true;
+};
 
 const handleDeviceConnect = async () => {
 	try {
@@ -40,4 +50,4 @@ const initDeviceController = async () => {
 	return new DeviceController(device, characteristic);
 };
 
-export { initDeviceController };
+export { isSameCommand, initDeviceController };

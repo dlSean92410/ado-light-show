@@ -1,5 +1,5 @@
-import type { Message } from '@/utility/type';
 import { hexToBytes } from '@dl_sean/ado-light-show-common/src/command';
+import { isSameCommand } from '@/page/penlight-manager/DeviceController/helper';
 
 class DeviceController {
 	private device: BluetoothDevice | null = null;
@@ -14,7 +14,6 @@ class DeviceController {
 
 		this.device.addEventListener('gattserverdisconnected', () => {
 			this.destroy();
-			chrome.runtime.sendMessage<Message>({ type: 'STOP_SESSION' });
 		});
 	}
 
@@ -56,13 +55,3 @@ class DeviceController {
 }
 
 export default DeviceController;
-
-const isSameCommand = (cmd1: Uint8Array<ArrayBuffer>, cmd2: Uint8Array<ArrayBuffer>) => {
-	if (cmd1.length !== cmd2.length) return false;
-
-	for (let i = 0; i < cmd2.length; i++) {
-		if (cmd1[i] !== cmd2[i]) return false;
-	}
-
-	return true;
-};

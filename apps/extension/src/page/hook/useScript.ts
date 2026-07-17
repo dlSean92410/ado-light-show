@@ -11,13 +11,14 @@ const useScript = () => {
 			{ type: 'GET_SCRIPT' },
 			(message) => {
 				setSource(message.source);
-				setName(message.script.name);
+				setName(message.name);
 			},
 		);
 
 		const handler = (message: Message) => {
 			if (message.type === 'SCRIPT_UPDATED') {
-				setName(message.script.name);
+				setName(message.name);
+				setSource(message.source);
 			}
 		};
 
@@ -26,24 +27,16 @@ const useScript = () => {
 	}, []);
 
 	const handleUpdateScriptSource = useCallback((newScriptSource: ScriptSource) => {
-		chrome.runtime.sendMessage<Message, MessageResponse<'SET_SCRIPT'>>(
-			{ type: 'SET_SCRIPT', source: newScriptSource },
-			(message) => {
-				setSource(newScriptSource);
-				setName(message.name);
-			},
-		);
+		chrome.runtime.sendMessage<Message>({ type: 'SET_SCRIPT', source: newScriptSource });
 	}, []);
 
 	// Update script data must be from 'CUSTOM' source
 	const handleUpdateScript = useCallback((newScript: Script) => {
-		chrome.runtime.sendMessage<Message, MessageResponse<'SET_SCRIPT'>>(
-			{ type: 'SET_SCRIPT', source: 'CUSTOM', script: newScript },
-			(message) => {
-				setSource(message.source);
-				setName(message.name);
-			},
-		);
+		chrome.runtime.sendMessage<Message>({
+			type: 'SET_SCRIPT',
+			source: 'CUSTOM',
+			script: newScript,
+		});
 	}, []);
 
 	const handleCustomScriptUpload = useCallback(

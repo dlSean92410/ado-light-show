@@ -1,45 +1,45 @@
 import type { Keyframe } from '@dl_sean/ado-light-show-common/src/type';
 
 type Message =
-	// Session
-	| { type: 'GET_SESSION' }
-	| { type: 'START_SESSION' }
-	| { type: 'STOP_SESSION' }
-	| ({ type: 'SESSION_UPDATED' } & MessageResponse<'GET_SESSION'>)
 	// Script
 	| { type: 'GET_SCRIPT' }
 	| { type: 'SET_SCRIPT'; source: ScriptSource; script?: Script }
 	| ({ type: 'SCRIPT_UPDATED' } & MessageResponse<'GET_SCRIPT'>)
-	// Device
-	| { type: 'GET_DEVICE_NAME' }
 	// Video
 	| { type: 'GET_VIDEO_TITLE' }
 	| { type: 'GET_VIDEO_TIME' }
 	// Command
 	| { type: 'SEND_RGB_COMMAND'; value: string }
-	// Content Script
-	| { type: 'START_PAIRING_PROCESS' }
-	| { type: 'PING' }
 	// Background Script
-	| { type: 'SET_LIGHT_ENGINE_STATE'; value: boolean };
+	| { type: 'SET_LIGHT_ENGINE_STATE'; value: boolean }
+	// Device Tab
+	| { type: 'GET_DEVICE_TAB' }
+	| { type: 'FOCUS_DEVICE_TAB' }
+	| { type: 'SET_DEVICE_COUNT'; value: number }
+	| ({ type: 'DEVICE_TAB_UPDATED' } & MessageResponse<'GET_DEVICE_TAB'>)
+	// Video Tab
+	| { type: 'GET_VIDEO_TAB' }
+	| { type: 'FOCUS_VIDEO_TAB' }
+	| { type: 'SET_VIDEO_TAB_STATE'; value: boolean }
+	| ({ type: 'VIDEO_TAB_UPDATED' } & MessageResponse<'GET_VIDEO_TAB'>);
 type Response =
-	// Session
-	| { type: 'GET_SESSION'; session: Session }
 	// Script
-	| { type: 'GET_SCRIPT'; source: ScriptSource; script: Script }
-	| { type: 'SET_SCRIPT'; source: ScriptSource; name: Script['name'] }
-	// Device
-	| { type: 'GET_DEVICE_NAME'; value: Device['name'] }
+	| { type: 'GET_SCRIPT'; source: ScriptSource; name: Script['name'] }
 	// Video
 	| { type: 'GET_VIDEO_TITLE'; value: string | null }
 	| { type: 'GET_VIDEO_TIME'; value: number }
-	// Content Script
-	| { type: 'PING'; pong: boolean };
+	// Device Tab
+	| { type: 'GET_DEVICE_TAB'; deviceCount: number }
+	// Video Tab
+	| {
+			type: 'GET_VIDEO_TAB';
+			hasVideoTab: boolean;
+			isVideoTab: boolean;
+			isCurrentTabValid: boolean;
+			videoTitle: string | null;
+	  };
 
 type MessageResponse<T extends Response['type']> = Omit<Extract<Response, { type: T }>, 'type'>;
-
-type Device = { id: BluetoothDevice['id']; name: BluetoothDevice['name'] };
-type Session = { isActive: true; tabID: number } | { isActive: false };
 
 type ScriptSource = 'CUSTOM' | 'REMOTE';
 type Script = {
@@ -47,4 +47,4 @@ type Script = {
 	data: Keyframe[] | null;
 };
 
-export type { Keyframe, Message, MessageResponse, Device, Session, ScriptSource, Script };
+export type { Keyframe, Message, MessageResponse, ScriptSource, Script };

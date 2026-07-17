@@ -1,7 +1,7 @@
 {
 	"manifest_version": 3,
 	"name": "Ado Light Show",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"icons": {
 		"16": "icon16.png",
 		"32": "icon32.png",
@@ -10,7 +10,7 @@
 	},
 	"description": "This extension uses your Ado penlight and custom made scripts to enhance the experience of watching Ado's music videos on YouTube.",
 	"action": {
-		"default_popup": "src/popup/index.html"
+		"default_popup": "src/page/popup/index.html"
 	},
 	"background": {
 		"service_worker": "src/background/index.ts",
@@ -19,14 +19,18 @@
 	"content_scripts": [
 		{
 			"matches": ["https://www.youtube.com/*"],
-			"js": ["src/content/index.tsx"]
+			"js": ["src/content/index.ts"]
 		}
 	],
 	"permissions": ["tabs"],
 	"web_accessible_resources": [
 		{
 			"matches": ["https://www.youtube.com/*"],
-			"resources": ["tutorial1.png", "tutorial2.jpeg", "command-encoder.wasm"]
+			"resources": ["command-encoder.wasm"]
+		},
+		{
+			"matches": ["<all_urls>"],
+			"resources": ["src/page/penlight-manager/index.html"]
 		}
 	],
 	"content_security_policy": {
