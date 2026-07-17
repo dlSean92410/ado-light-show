@@ -1,4 +1,4 @@
-import { getVideoId, getCurrentTab, getVideoTime } from '@/background/helper';
+import { getVideoId, getCurrentTab, getVideoTime, getVideoAverageRGB } from '@/background/helper';
 import { REMOTE_SCRIPT_BASE_URL } from '@/utility/constant';
 import type { Keyframe, Message, Script, ScriptSource } from '@/utility/type';
 
@@ -16,6 +16,7 @@ class LightEngine {
 	private static readonly SCRIPTS_DEFAULT: Record<ScriptSource, Script> = Object.freeze({
 		CUSTOM: { name: null, data: null },
 		REMOTE: { name: null, data: null },
+		AUTO: { name: null, data: null },
 	});
 	private scripts = structuredClone(LightEngine.SCRIPTS_DEFAULT);
 	private scriptSource: ScriptSource = 'REMOTE';
@@ -34,13 +35,7 @@ class LightEngine {
 		videoTabId: number | null;
 		deviceTabId: number | null;
 	}) => {
-		if (
-			this.scripts[this.scriptSource].data == null ||
-			this.loopID != null ||
-			videoTabId == null ||
-			deviceTabId == null
-		)
-			return;
+		if (this.loopID != null || videoTabId == null || deviceTabId == null) return;
 
 		this.loopID = setInterval(() => {
 			this.loop(videoTabId, deviceTabId);
@@ -56,21 +51,26 @@ class LightEngine {
 
 	private loop = async (videoTabId: number, deviceTabId: number) => {
 		const keyframes = this.scripts[this.scriptSource].data;
-		const time = await getVideoTime(videoTabId);
-		if (keyframes == null || time == null) return;
 
-		const currentKFIndex = getCurrentKeyframeIndex(keyframes, time);
-		const currentKF = keyframes[currentKFIndex ?? -1] ?? null;
-		if (!currentKF) return;
+		const rgb =
+			keyframes == null // Auto mode
+				? await getVideoAverageRGB(videoTabId)
+				: await (async () => {
+						const time = await getVideoTime(videoTabId);
+						if (time == null) return;
 
-		const rgb = getCurrentRGB(currentKF, time);
+						const currentKFIndex = getCurrentKeyframeIndex(keyframes, time);
+						const currentKF = keyframes[currentKFIndex ?? -1] ?? null;
+						if (!currentKF) return;
+
+						return getCurrentRGB(currentKF, time);
+					})();
 		if (rgb == null) return;
 
 		const hex = rgbToHex(rgb);
 		const command = this.wrapper?.getColorCommand(hex);
 		if (command == null) return;
 
-		console.debug('Ado Light Show extension background - SEND_RGB_COMMAND', { command });
 		chrome.tabs.sendMessage<Message>(deviceTabId, { type: 'SEND_RGB_COMMAND', value: command });
 	};
 
@@ -110,6 +110,8 @@ class LightEngine {
 					remoteScript ?? LightEngine.SCRIPTS_DEFAULT.REMOTE;
 				break;
 			}
+			default:
+				break;
 		}
 
 		return { source: this.scriptSource, script: this.scripts[this.scriptSource] };
@@ -151,7 +153,6 @@ class LightEngine {
 					const time = kf.mode === 'pulse' ? roundTime(kf.time - kf.offsets[0]) : kf.time;
 					return { ...kf, time };
 				});
-				console.debug('Loaded script:', data);
 
 				return { name: scriptIndex[videoID].name, data };
 			}

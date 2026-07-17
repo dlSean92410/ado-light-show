@@ -8,7 +8,7 @@ const PENLIGHT_MANUAL_URL =
 
 const REMOTE_SCRIPT_BASE_URL =
 	'https://raw.githubusercontent.com/dlSean92410/ado-light-show/main/scripts';
-const SCRIPT_SOURCES: [ScriptSource, ScriptSource] = ['CUSTOM', 'REMOTE'];
+const SCRIPT_SOURCES: ScriptSource[] = ['CUSTOM', 'REMOTE', 'AUTO'];
 
 export {
 	DEVICE_NAME,

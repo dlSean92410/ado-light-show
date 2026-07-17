@@ -1,4 +1,4 @@
-import type { Keyframe } from '@dl_sean/ado-light-show-common/src/type';
+import type { Keyframe, RGB } from '@dl_sean/ado-light-show-common/src/type';
 
 type Message =
 	// Script
@@ -8,6 +8,7 @@ type Message =
 	// Video
 	| { type: 'GET_VIDEO_TITLE' }
 	| { type: 'GET_VIDEO_TIME' }
+	| { type: 'GET_VIDEO_AVERAGE_RGB' }
 	// Command
 	| { type: 'SEND_RGB_COMMAND'; value: string }
 	// Background Script
@@ -28,6 +29,7 @@ type Response =
 	// Video
 	| { type: 'GET_VIDEO_TITLE'; value: string | null }
 	| { type: 'GET_VIDEO_TIME'; value: number }
+	| { type: 'GET_VIDEO_AVERAGE_RGB'; value: RGB | null }
 	// Device Tab
 	| { type: 'GET_DEVICE_TAB'; deviceCount: number }
 	// Video Tab
@@ -41,7 +43,7 @@ type Response =
 
 type MessageResponse<T extends Response['type']> = Omit<Extract<Response, { type: T }>, 'type'>;
 
-type ScriptSource = 'CUSTOM' | 'REMOTE';
+type ScriptSource = 'CUSTOM' | 'REMOTE' | 'AUTO';
 type Script = {
 	name: string | null;
 	data: Keyframe[] | null;
