@@ -3,6 +3,8 @@ import { PENLIGHT_MANUAL_URL } from '@/utility/constant';
 import ScriptSection from '@/page/component/ScriptSection';
 import type DeviceController from '@/page/penlight-manager/DeviceController';
 import type { Message } from '@/utility/type';
+import useVideoTab from '@/page/hook/useVideoTab';
+import Marquee from '@/page/component/Marquee';
 import { useEffect, useRef, useState } from 'react';
 import VideoSection from './component/VideoSection';
 import DeviceSection from './component/DeviceSection';
@@ -30,11 +32,15 @@ export default function App() {
 		return () => chrome.runtime.onMessage.removeListener(handler);
 	}, []);
 
+	const { hasVideoTab, videoTitle } = useVideoTab();
+
 	return (
 		<div
 			className="flex flex-column"
 			style={{ maxWidth: '50vw', margin: 'auto', gap: '1rem', padding: '0.5rem' }}
 		>
+			{hasVideoTab && !!videoTitle && <Marquee value={`🎶 ${videoTitle} `} />}
+
 			<section className="flex-column">
 				<div className="row">
 					<h2>Penlight Manager</h2>
