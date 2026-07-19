@@ -22,6 +22,12 @@ import VideoController from '@/content/VideoController';
 				sendResponse(response);
 				break;
 			}
+			case 'GET_VIDEO_AVERAGE_RGB': {
+				const rgb = videoController.getAverageRGB();
+				const response: MessageResponse<'GET_VIDEO_AVERAGE_RGB'> = { value: rgb };
+				sendResponse(response);
+				break;
+			}
 			default:
 				break;
 		}

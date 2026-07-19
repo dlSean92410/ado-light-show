@@ -74,6 +74,27 @@ const getVideoTime = async (tabId: number) => {
 	return value;
 };
 
+const getVideoAverageRGB = async (tabId: number) => {
+	const value = await new Promise<MessageResponse<'GET_VIDEO_AVERAGE_RGB'>['value'] | undefined>(
+		(resolve) => {
+			chrome.tabs.sendMessage<Message, MessageResponse<'GET_VIDEO_AVERAGE_RGB'>>(
+				tabId,
+				{ type: 'GET_VIDEO_AVERAGE_RGB' },
+				(response) => {
+					if (chrome.runtime.lastError) {
+						resolve(undefined);
+						return;
+					}
+
+					resolve(response.value);
+				},
+			);
+		},
+	);
+
+	return value;
+};
+
 const getCurrentTabInformation = async () => {
 	const currentTab = await getCurrentTab();
 	const currentTabId = currentTab?.id ?? null;
@@ -97,6 +118,7 @@ export {
 	getCurrentTab,
 	getVideoTitle,
 	getVideoTime,
+	getVideoAverageRGB,
 	getCurrentTabInformation,
 	getVideoTabInformation,
 };

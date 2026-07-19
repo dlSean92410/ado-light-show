@@ -1,3 +1,4 @@
+import Marquee from '@/page/component/Marquee';
 import useVideoTab from '@/page/hook/useVideoTab';
 
 const VideoSection = () => {
@@ -10,16 +11,9 @@ const VideoSection = () => {
 		handleSetTabState,
 	} = useVideoTab();
 
-	const isWrongTab = hasVideoTab && !isVideoTab;
-
 	return (
 		<>
-			{isVideoTab && !!videoTitle && (
-				<div className="marquee">
-					<span className="marquee-content">🎶 {videoTitle} </span>
-					<span className="marquee-content">🎶 {videoTitle} </span>
-				</div>
-			)}
+			{hasVideoTab && !!videoTitle && <Marquee value={`🎶 ${videoTitle} `} />}
 
 			<section className="flex-column">
 				<h2>Video</h2>
@@ -46,7 +40,7 @@ const VideoSection = () => {
 					</button>
 				</div>
 
-				{isWrongTab && (
+				{hasVideoTab && !isVideoTab && (
 					<div className="row">
 						<button className="btn secondary" onClick={handleTabFocus}>
 							Open synced tab

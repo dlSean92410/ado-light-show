@@ -3,7 +3,7 @@ import type { Keyframe, Message, MessageResponse, Script, ScriptSource } from '@
 import { roundTime, sanitizeScript } from '@dl_sean/ado-light-show-common/src/script';
 
 const useScript = () => {
-	const [source, setSource] = useState<ScriptSource>('CUSTOM');
+	const [source, setSource] = useState<ScriptSource>('REMOTE');
 	const [name, setName] = useState<Script['name']>(null);
 
 	useEffect(() => {
@@ -56,7 +56,6 @@ const useScript = () => {
 							return { ...kf, time };
 						});
 
-						console.debug('Loaded script:', data);
 						handleUpdateScript({ name: file.name, data });
 					}
 				} catch (err) {

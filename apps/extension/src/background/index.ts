@@ -203,8 +203,7 @@ import { PENLIGHT_MANAGER_PATH } from '@/utility/constant';
 				videoTitle,
 			});
 		}
-		if (videoTabId != null && videoTabId !== tabId) return;
-		await lightEngine.syncScript();
+		if (!(videoTabId != null && videoTabId !== tabId)) await lightEngine.syncScript();
 		handleLightEngineLoopState(videoTabId != null && deviceCount > 0);
 	});
 
